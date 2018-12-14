@@ -48,8 +48,8 @@ def network_config(args, split='train', param=None, resume=False, pretrained_pat
         # pretrained mobilenet
         print('==> Loading from mobilenet pretrained modes')
         network_dict = network.state_dict()
-        mobilenet_pretrained = torch.load('mobilenet_sgd_rmsprop_69.526.tar')['state_dict']
-        pretrained_dict = {k[7:]:v for k,v in mobilenet_pretrained.items()}
+        mobilenet_pretrained = torch.load('mobilenet_sgd_68.848.pth.tar')['state_dict']
+        pretrained_dict = {'module.mobilenet_v1.' + k[7:]:v for k,v in mobilenet_pretrained.items()}
         pretrained_dict = {k:v for k,v in pretrained_dict.items() if k in network_dict}
         network_dict.update(pretrained_dict)
         network.load_state_dict(network_dict)
