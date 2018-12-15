@@ -61,7 +61,7 @@ def main(args):
     i2t_models = os.listdir(args.checkpoint_dir)
     i2t_models.sort()
     for i2t_model in i2t_models:
-        model_file = os.path.join(args.checkpoint_dir, i2t_model)
+        model_file = os.path.join(args.pretrained_dir, i2t_model)
         if os.path.isdir(model_file):
             continue
         epoch = i2t_model.split('.')[0]

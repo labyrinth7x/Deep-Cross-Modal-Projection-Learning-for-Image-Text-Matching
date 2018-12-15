@@ -4,9 +4,10 @@ import shutil
 import time
 import logging
 import torch
+import torch.utils.data as data
 import torch.nn as nn
 import torchvision.transforms as transforms
-from utils.metric import AverageMeter, Loss
+from utils.metric import AverageMeter, Loss, constraints_loss
 from test import test
 from config import data_config, network_config
 from train_config import config
@@ -47,9 +48,18 @@ def train(epoch, train_loader, network, optimizer, compute_loss, args):
 
         # compute loss
         image_embeddings, text_embeddings = network(images, captions, captions_length)
-
         cmpm_loss, cmpc_loss, loss, image_precision, text_precision, pos_avg_sim, neg_arg_sim = compute_loss(image_embeddings, text_embeddings, labels)
-        train_loss.update(loss, images.shape[0])
+        
+
+        if step % 10 == 0:
+            print('epoch:{}, step:{}, cmpm_loss:{:.3f}, cmpc_loss:{:.3f}'.format(epoch, step, cmpm_loss, cmpc_loss))
+        
+        if (args.constraints_images or args.constraints_text) and step == len(train_loader) - 1:
+            con_images, con_text = constraints_loss(train_loader, network, args)
+            loss += (con_images + con_text)
+            print('epoch:{}, step:{}, con_images:{:.3f}, con_text:{:.3f}'.format(epoch, step, con_images, con_text))
+        
+
         # compute gradient and do ADAM step
         optimizer.zero_grad()
         loss.backward()
@@ -59,11 +69,12 @@ def train(epoch, train_loader, network, optimizer, compute_loss, args):
         # measure elapsed time
         batch_time.update(time.time() - end)
         end = time.time()
+        
+        train_loss.update(loss, images.shape[0])
         image_pre.update(image_precision, images.shape[0])
         text_pre.update(text_precision, images.shape[0])
         
-        if step % 10 == 0:
-            print('epoch:{}, step:{}, cmpm_loss:{:.3f}, cmpc_loss:{:.3f}'.format(epoch, step, cmpm_loss, cmpc_loss))
+        
         
     return train_loss.avg, batch_time.avg, image_pre.avg, text_pre.avg
 

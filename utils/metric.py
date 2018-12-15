@@ -16,7 +16,7 @@ def pairwise_distance(A, B):
     Compute distance between points in A and points in B
     :param A:  (m,n) -m points, each of n dimension. Every row vector is a point, denoted as A(i).
     :param B:  (k,n) -k points, each of n dimension. Every row vector is a point, denoted as B(j).
-    :return:  Matrix with (m,n). And the ele in (i,j) is the distance between A(i) and B(j)
+    :return:  Matrix with (m, k). And the ele in (i,j) is the distance between A(i) and B(j)
     """
     A_square = torch.sum(A * A, dim=1, keepdim=True)
     B_square = torch.sum(B * B, dim=1, keepdim=True)
@@ -36,6 +36,67 @@ def one_hot_coding(index, k):
     out.scatter_(1, index, 1)
     return out
 
+# deprecated due to the large memory usage
+def constraints_old(features, labels):
+    distance = pairwise_distance(features, features)
+    labels_reshape = torch.reshape(labels, (features.shape[0], 1))
+    labels_dist = labels_reshape - labels_reshape.t()
+    labels_mask = (labels_dist == 0).float()
+
+    # Average loss with each matching pair
+    num = torch.sum(labels_mask) - features.shape[0]
+    if num == 0:
+        con_loss = 0.0
+    else:
+        con_loss = torch.sum(distance * labels_mask) / num / 2
+
+    return con_loss
+
+
+def constraints(features, labels):
+    labels = torch.reshape(labels, (labels.shape[0],1))
+    con_loss = 0.0
+    for index in range(len(labels)):
+        labels_mask = (labels == index)
+        feas = torch.masked_select(features, labels_mask)
+        feas = feas.view(-1, features.shape[1])
+        distance = pairwise_distance(feas, feas)
+        num = torch.sum(labels_mask) - feas.shape[0]
+        if num > 0:
+            con_loss += torch.sum(distance) / num / 2
+    return con_loss
+
+
+def constraints_loss(data_loader, network, args):
+    network.eval()
+    max_size = args.batch_size * len(data_loader)
+    images_bank = torch.zeros((max_size, args.feature_size)).cuda()
+    text_bank = torch.zeros((max_size,args.feature_size)).cuda()
+    labels_bank = torch.zeros(max_size).cuda()
+    index = 0
+    con_images = 0.0
+    con_text = 0.0
+    with torch.no_grad():
+        for images, captions, labels, captions_length in data_loader:
+            images = images.cuda()
+            captions = captions.cuda()
+            interval = images.shape[0]
+            image_embeddings, text_embeddings = network(images, captions, captions_length)
+            images_bank[index: index + interval] = image_embeddings
+            text_bank[index: index + interval] = text_embeddings
+            labels_bank[index: index + interval] = labels
+            index = index + interval
+        images_bank = images_bank[:index]
+        text_bank = text_bank[:index]
+        labels_bank = labels_bank[:index]
+    
+    if args.constraints_text:
+        con_text = constraints(text_bank, labels_bank)
+    if args.constraints_images:
+        con_images = constraints(images_bank, labels_bank)
+
+    return con_images, con_text
+   
 
 class Loss(nn.Module):
     def __init__(self, args):
@@ -122,25 +183,12 @@ class Loss(nn.Module):
          
         i2t_pred = F.softmax(image_proj_text, dim=1)
         #i2t_loss = i2t_pred * torch.log((i2t_pred + self.epsilon)/ (labels_mask_norm + self.epsilon))
-        '''
-        i2t_pred_loss = i2t_pred * F.log_softmax(image_proj_text, dim=1)
-        i2t_true_loss = i2t_pred * torch.log(labels_mask_norm + self.epsilon) 
-        i2t_loss = i2t_pred_loss - i2t_true_loss
-        '''
         i2t_loss = i2t_pred * (F.log_softmax(image_proj_text, dim=1) - torch.log(labels_mask_norm + self.epsilon))
         
         t2i_pred = F.softmax(text_proj_image, dim=1)
         #t2i_loss = t2i_pred * torch.log((t2i_pred + self.epsilon)/ (labels_mask_norm + self.epsilon))
-        '''
-        t2i_pred_loss = t2i_pred * F.log_softmax(text_proj_image, dim=1)
-        t2i_true_loss = t2i_pred * torch.log(labels_mask_norm + self.epsilon)
-        t2i_loss = t2i_pred_loss - t2i_true_loss
-        '''
         t2i_loss = t2i_pred * (F.log_softmax(text_proj_image, dim=1) - torch.log(labels_mask_norm + self.epsilon))
-        '''
-        i2t_matching_loss = torch.mean(torch.sum(i2t_loss, dim=1))
-        t2i_matching_loss = torch.mean(torch.sum(t2i_loss, dim=1))
-        '''
+
         cmpm_loss = torch.mean(torch.sum(i2t_loss, dim=1)) + torch.mean(torch.sum(t2i_loss, dim=1))
 
         sim_cos = torch.matmul(image_norm, text_norm.t())
@@ -149,6 +197,7 @@ class Loss(nn.Module):
         neg_avg_sim = torch.mean(torch.masked_select(sim_cos, labels_mask == 0))
         
         return cmpm_loss, pos_avg_sim, neg_avg_sim
+
 
     def forward(self, image_embeddings, text_embeddings, labels):
         cmpm_loss = 0.0
@@ -161,7 +210,9 @@ class Loss(nn.Module):
             cmpm_loss, pos_avg_sim, neg_avg_sim = self.compute_cmpm_loss(image_embeddings, text_embeddings, labels)
         if self.CMPC:
             cmpc_loss, image_precision, text_precision = self.compute_cmpc_loss(image_embeddings, text_embeddings, labels)
+        
         loss = cmpm_loss + cmpc_loss
+        
         return cmpm_loss, cmpc_loss, loss, image_precision, text_precision, pos_avg_sim, neg_avg_sim
 
 

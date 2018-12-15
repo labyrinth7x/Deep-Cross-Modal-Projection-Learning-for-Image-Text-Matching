@@ -14,7 +14,7 @@ def parse_args():
     #parser.add_argument('--json_dir', type=str, help='directory to store json file')
     parser.add_argument('--checkpoint_dir', type=str, help='directory to store checkpoint')
     parser.add_argument('--log_dir', type=str, help='directory to store log')
-    parser.add_argument('--pretrained_path', type=str, default = None, help='directory to pretrained model')
+    parser.add_argument('--pretrained_path', type=str, default = None, help='directory to pretrained model, whole model or just visual part')
 
     # LSTM setting
     parser.add_argument('--embedding_size', type=int, default=512)
@@ -24,18 +24,20 @@ def parse_args():
     parser.add_argument('--max_length', type=int, default=100)
 
     # Model setting
-    parser.add_argument('--resume', action='store_true')
+    parser.add_argument('--image_model', type=str, default='mobilenet_v1')
+    parser.add_argument('--resume', action='store_true', help='whether or not to restore the pretrained whole model')
     parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument('--num_epoches', type=int, default=100)
     parser.add_argument('--ckpt_steps', type=int, default=5000, help='#steps to save checkpoint')
     parser.add_argument('--feature_size', type=int, default=512)
     parser.add_argument('--img_model', type=str, default='mobilenet_v1', help='model to train images')
     parser.add_argument('--loss_weight', type=float, default=1)
-    parser.add_argument('--CMPM', action='store_false')
-    parser.add_argument('--CMPC', action='store_false')
+    parser.add_argument('--CMPM', action='store_true')
+    parser.add_argument('--CMPC', action='store_true')
+    parser.add_argument('--constraints_text', action='store_true')
+    parser.add_argument('--constraints_images', action='store_true')
     parser.add_argument('--num_classes', type=int, default=11003)
-    parser.add_argument('--image_model', type=str, default='mobilenet')
-    parser.add_argument('--mobilenet_pretrained', action='store_true')
+    parser.add_argument('--pretrained', action='store_true', help='whether or not to restore the pretrained visual model')
 
     # Optimization setting
     parser.add_argument('--optimizer', type=str, default='adam', help='one of "sgd", "adam", "rmsprop", "adadelta", or "adagrad"')

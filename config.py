@@ -15,18 +15,6 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
-numpy_type_map = {
-    'float64': torch.DoubleTensor,
-    'float32': torch.FloatTensor,
-    'float16': torch.HalfTensor,
-    'int64': torch.LongTensor,
-    'int32': torch.IntTensor,
-    'int16': torch.ShortTensor,
-    'int8': torch.CharTensor,
-    'uint8': torch.ByteTensor,
-}
-
-
 def data_config(dataset_dir, batch_size, split, max_length, transform):
     data_split = CuhkPedes(dataset_dir, split, max_length, transform)
     if split == 'train':
@@ -43,13 +31,20 @@ def network_config(args, split='train', param=None, resume=False, pretrained_pat
     cudnn.benchmark = True
     args.start_epoch = 0
     if split != 'train':
-        args.mobilenet_pretrained = False
-    if args.mobilenet_pretrained:
+        args.pretrained = False
+    if args.pretrained:
         # pretrained mobilenet
-        print('==> Loading from mobilenet pretrained modes')
+        print('==> Loading from pretrained models')
         network_dict = network.state_dict()
-        mobilenet_pretrained = torch.load('mobilenet_sgd_68.848.pth.tar')['state_dict']
-        pretrained_dict = {'module.mobilenet_v1.' + k[7:]:v for k,v in mobilenet_pretrained.items()}
+        if args.image_model == 'mobilenet_v1':
+            cnn_pretrained = torch.load(pretrained_path)['state_dict']
+            start = 7
+        else:
+            cnn_pretrained = torch.load(pretrained_path)
+            start = 0
+        # process keyword of pretrained model
+        prefix = 'module.image_model.'
+        pretrained_dict = {prefix + k[start:] :v for k,v in cnn_pretrained.items()}
         pretrained_dict = {k:v for k,v in pretrained_dict.items() if k in network_dict}
         network_dict.update(pretrained_dict)
         network.load_state_dict(network_dict)
@@ -63,13 +58,14 @@ def network_config(args, split='train', param=None, resume=False, pretrained_pat
             network.load_state_dict(checkpoint['state_dict'])
     # optimizer
     if split == 'train':
-        mobilenet_params = list(map(id, network.module.mobilenet_v1.parameters()))
-        other_params = filter(lambda p: id(p) not in mobilenet_params, network.parameters())
+        # different params for different part
+        cnn_params = list(map(id, network.module.image_model.parameters()))
+        other_params = filter(lambda p: id(p) not in cnn_params, network.parameters())
         other_params = list(other_params)
         if param is not None:
             other_params.extend(list(param))
         param_groups = [{'params':other_params},
-            {'params':network.module.mobilenet_v1.parameters(), 'weight_decay':args.wd}]
+            {'params':network.module.image_model.parameters(), 'weight_decay':args.wd}]
         optimizer = torch.optim.Adam(
             param_groups,
             lr = args.lr, betas=(args.adam_alpha, args.adam_beta), eps=args.epsilon)
@@ -87,13 +83,13 @@ def network_config(args, split='train', param=None, resume=False, pretrained_pat
 
 
 def log_config(args, ca):
-    logging.info(args)
     filename = args.log_dir +'/' + ca + '.log'
     handler = logging.FileHandler(filename)                                                                                   
     handler.setLevel(logging.INFO)                                                                                                      
     formatter = logging.Formatter('%(message)s')                                                                                           
     handler.setFormatter(formatter)                                                                                                     
-    logger.addHandler(handler) 
+    logger.addHandler(handler)     
+    logging.info(args)
 
 
 def dir_config(args):

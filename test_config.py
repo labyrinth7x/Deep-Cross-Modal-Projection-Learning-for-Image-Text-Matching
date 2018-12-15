@@ -5,7 +5,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='command for evaluate on CUHK-PEDES')
     # Directory
     parser.add_argument('--dataset_dir', type=str, help='directory to store dataset')
-    parser.add_argument('--checkpoint_dir', type=str, help='directory to load checkpoint')
+    parser.add_argument('--pretrained_dir', type=str, help='directory to load checkpoint')
     parser.add_argument('--log_dir', type=str, help='directory to store log')
 
     # LSTM setting
@@ -17,7 +17,7 @@ def parse_args():
     parser.add_argument('--max_length', type=int, default=100)
     parser.add_argument('--feature_size', type=int, default=512)
 
-    parser.add_argument('--image_model', type=str, default='mobilenet')
+    parser.add_argument('--image_model', type=str, default='mobilenet_v1')
 
     # Default setting
     parser.add_argument('--gpus', type=str, default='0')
