@@ -33,14 +33,12 @@ def network_config(args, split='train', param=None, resume=False, model_path=Non
 
     # process network params
     if resume:
-        if os.path.isfile(model_path):
-            print('==> Loading checkpoint "{}"'.format(model_path))
-            checkpoint = torch.load(model_path)
-            args.start_epoch = checkpoint['epoch'] + 1
-            # best_prec1 = checkpoint['best_prec1']
-            network.load_state_dict(checkpoint['network'])
-        else:
-            raise RuntimeError('==> No model to load in, wrong model path')
+        directory.check_file(model_path, 'model_file')
+        print('==> Loading checkpoint "{}"'.format(model_path))
+        checkpoint = torch.load(model_path)
+        args.start_epoch = checkpoint['epoch'] + 1
+        # best_prec1 = checkpoint['best_prec1']
+        network.load_state_dict(checkpoint['network'])
     else:
         # pretrained
         if model_path is not None:
@@ -59,6 +57,7 @@ def network_config(args, split='train', param=None, resume=False, model_path=Non
             network_dict.update(pretrained_dict)
             network.load_state_dict(network_dict)
 
+    # process optimizer params
     if split == 'test':
         optimizer = None
     else:
