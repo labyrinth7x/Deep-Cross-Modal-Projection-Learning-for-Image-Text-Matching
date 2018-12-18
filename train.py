@@ -67,9 +67,7 @@ def train(epoch, train_loader, network, optimizer, compute_loss, args):
         train_loss.update(loss, images.shape[0])
         image_pre.update(image_precision, images.shape[0])
         text_pre.update(text_precision, images.shape[0])
-        
-        
-        
+                
     return train_loss.avg, batch_time.avg, image_pre.avg, text_pre.avg
 
 
@@ -113,7 +111,7 @@ def main(args):
             ac_t2i_best = ac_top1_t2i
             is_best = True
         '''
-        state = {'state_dict': network.state_dict(), 'W': compute_loss.W, 'epoch': args.start_epoch + epoch}
+        state = {'network': network.state_dict(), 'optimizer': optimizer.state_dict(), 'W': compute_loss.W, 'epoch': args.start_epoch + epoch}
         #         'ac': [ac_top1_i2t, ac_top10_i2t, ac_top1_t2i, ac_top10_t2i],
         #         'best_ac': [ac_i2t_best, ac_t2i_best]}
         save_checkpoint(state, epoch, args.checkpoint_dir, is_best)

@@ -22,6 +22,7 @@ def parse_args():
     parser.add_argument('--vocab_size', type=int, default=12000)
     parser.add_argument('--lstm_dropout_ratio', type=float, default=0.7)
     parser.add_argument('--max_length', type=int, default=100)
+    parser.add_argument('--bidirectional', action='store_true')
 
     # Model setting
     parser.add_argument('--image_model', type=str, default='mobilenet_v1')
