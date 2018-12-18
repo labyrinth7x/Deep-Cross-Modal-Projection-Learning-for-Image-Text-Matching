@@ -36,6 +36,7 @@ def one_hot_coding(index, k):
     out.scatter_(1, index, 1)
     return out
 
+
 # deprecated due to the large memory usage
 def constraints_old(features, labels):
     distance = pairwise_distance(features, features)
@@ -48,23 +49,25 @@ def constraints_old(features, labels):
     if num == 0:
         con_loss = 0.0
     else:
-        con_loss = torch.sum(distance * labels_mask) / num / 2
+        con_loss = torch.sum(distance * labels_mask) / num
 
     return con_loss
 
 
 def constraints(features, labels):
     labels = torch.reshape(labels, (labels.shape[0],1))
-    con_loss = 0.0
-    for index in range(len(labels)):
+    con_loss = AverageMeter()
+    index_dict = {k.item() for k in labels}
+    for index in index_dict:
         labels_mask = (labels == index)
         feas = torch.masked_select(features, labels_mask)
         feas = feas.view(-1, features.shape[1])
         distance = pairwise_distance(feas, feas)
-        num = torch.sum(labels_mask) - feas.shape[0]
-        if num > 0:
-            con_loss += torch.sum(distance) / num / 2
-    return con_loss
+        #torch.sqrt_(distance)
+        num = feas.shape[0] * (feas.shape[0] - 1)
+        loss = torch.sum(distance) / num
+        con_loss.update(loss, n = num / 2)
+    return con_loss.avg
 
 
 def constraints_loss(data_loader, network, args):
@@ -108,6 +111,7 @@ class Loss(nn.Module):
         if args.resume:
             checkpoint = torch.load(args.pretrained_path)
             self.W = Parameter(checkpoint['W'])
+            print('=========> Loading in parameter W from pretrained models')
         else:
             self.W = Parameter(torch.randn(args.feature_size, args.num_classes))
             self.init_weight()
@@ -124,7 +128,7 @@ class Loss(nn.Module):
         :param labels: Tensor with dtype torch.int32
         :return:
         """
-        criterion = nn.CrossEntropyLoss(reduction='elementwise_mean')
+        criterion = nn.CrossEntropyLoss(reduction='mean')
         self.W_norm = self.W / self.W.norm(dim=0)
         #labels_onehot = one_hot_coding(labels, self.num_classes).float()
         image_norm = image_embeddings / image_embeddings.norm(dim=1, keepdim=True)

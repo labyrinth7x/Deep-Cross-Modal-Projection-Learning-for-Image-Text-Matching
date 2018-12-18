@@ -41,8 +41,8 @@ def test(data_loader, network, args):
         labels_bank = labels_bank[:index]
         #[ac_top1_t2i, ac_top10_t2i] = compute_topk(text_bank, images_bank, labels_bank, labels_bank, [1,10])
         #[ac_top1_i2t, ac_top10_i2t] = compute_topk(images_bank, text_bank, labels_bank, labels_bank, [1,10])
-        ac_top1_t2i, ac_top10_t2i, ac_top1_i2t, ac_top10_i2t = compute_topk(images_bank, text_bank, labels_bank, labels_bank, [1,10], True)
-        return ac_top1_t2i, ac_top1_i2t, ac_top10_t2i, ac_top10_i2t, batch_time.avg
+        ac_top1_i2t, ac_top10_i2t, ac_top1_t2i, ac_top10_t2i = compute_topk(images_bank, text_bank, labels_bank, labels_bank, [1,10], True)
+        return ac_top1_i2t, ac_top10_i2t, ac_top1_t2i, ac_top10_t2i, batch_time.avg
 
 
 def main(args):
@@ -58,7 +58,7 @@ def main(args):
     ac_i2t_top10_best = 0.0
     ac_t2i_top1_best = 0.0
     ac_t2i_top10_best = 0.0
-    i2t_models = os.listdir(args.checkpoint_dir)
+    i2t_models = os.listdir(args.pretrained_dir)
     i2t_models.sort()
     for i2t_model in i2t_models:
         model_file = os.path.join(args.pretrained_dir, i2t_model)
@@ -69,7 +69,7 @@ def main(args):
             continue
         args.resume = True
         network, _ = network_config(args, 'test', None, True, model_file)
-        ac_top1_t2i, ac_top1_i2t, ac_top10_t2i, ac_top10_i2t, test_time = test(test_loader, network, args)
+        ac_top1_i2t, ac_top10_i2t, ac_top1_t2i, ac_top10_t2i, test_time = test(test_loader, network, args)
         if ac_top1_i2t > ac_i2t_top1_best:
             ac_i2t_top1_best = ac_top1_i2t
         if ac_top10_i2t > ac_i2t_top10_best:
@@ -78,12 +78,12 @@ def main(args):
             ac_t2i_top1_best = ac_top1_t2i
         if ac_top10_t2i > ac_t2i_top10_best:
             ac_t2i_top10_best = ac_top10_t2i
-
+         
         logging.info('epoch:{}'.format(epoch))
-        logging.info('top1_i2t: {:.3f}, top10_i2t: {:.3f}, top1_t2i: {:.3f}, top10_t2i: {:.3f}'.format(
-            ac_top1_i2t, ac_top10_i2t, ac_top1_t2i, ac_top10_t2i))
-    print('i2t_top1_best: {:.3f}, i2t_top10_best: {:.3f}, t2i_top1_best: {:.3f}, t2i_top10_best: {:.3f}'.format(
-            ac_i2t_top1_best, ac_i2t_top10_best, ac_t2i_top1_best, ac_t2i_top10_best))
+        logging.info('top1_t2i: {:.3f}, top10_t2i: {:.3f}, top1_i2t: {:.3f}, top10_i2t: {:.3f}'.format(
+            ac_top1_t2i, ac_top10_t2i, ac_top1_i2t, ac_top10_i2t))
+    logging.info('i2t_top1_best: {:.3f}, i2t_top10_best: {:.3f}, t2i_top1_best: {:.3f}, t2i_top10_best: {:.3f}'.format(
+            ac_t2i_top1_best, ac_t2i_top10_best, ac_i2t_top1_best, ac_i2t_top10_best))
 
 
 if __name__ == '__main__':

@@ -47,8 +47,9 @@ def parse_args():
     parser.add_argument('--adam_beta', type=float, default=0.999)
     parser.add_argument('--epsilon', type=float, default=1e-8)
     parser.add_argument('--end_lr', type=float, default=0.0001, help='minimum end learning rate used by a polynomial decay learning rate')
-    parser.add_argument('--lr_decay_ratio', type=float, default=0.94)
-    parser.add_argument('--epoches_decay', type=int, default=500, help='#epoches when learning rate decays')
+    parser.add_argument('--lr_decay_type', type=str, default='exponential', help='One of "fixed" or "exponential"')
+    parser.add_argument('--lr_decay_ratio', type=float, default=0.1)
+    parser.add_argument('--epoches_decay', type=int, default=50, help='#epoches when learning rate decays')
 
     # Default setting
     parser.add_argument('--gpus', type=str, default='0')

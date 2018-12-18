@@ -1,5 +1,7 @@
 import argparse
 from config import log_config 
+import logging
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='command for evaluate on CUHK-PEDES')

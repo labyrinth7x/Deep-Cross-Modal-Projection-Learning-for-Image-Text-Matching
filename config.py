@@ -88,6 +88,7 @@ def log_config(args, ca):
     handler.setLevel(logging.INFO)                                                                                                      
     formatter = logging.Formatter('%(message)s')                                                                                           
     handler.setFormatter(formatter)                                                                                                     
+    logger.addHandler(logging.StreamHandler())
     logger.addHandler(handler)     
     logging.info(args)
 
@@ -99,3 +100,12 @@ def dir_config(args):
     # save checkpoint
     directory.makedir(args.checkpoint_dir)
     directory.makedir(os.path.join(args.checkpoint_dir,'model_best'))
+
+
+def adjust_lr(optimizer, epoch, args):
+    # Decay learning rate by args.lr_decay_ratio every args.epoches_decay
+    if args.lr_decay_type == 'exponential':
+        lr = args.lr * ((1 - args.lr_decay_ratio) ** (args.start_epoch + epoch // args.epoches_decay))
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
+    logging.info('lr:{}'.format(lr))

@@ -9,7 +9,7 @@ import torch.nn as nn
 import torchvision.transforms as transforms
 from utils.metric import AverageMeter, Loss, constraints_loss
 from test import test
-from config import data_config, network_config
+from config import data_config, network_config, adjust_lr
 from train_config import config
 
 logger = logging.getLogger()
@@ -22,13 +22,6 @@ def save_checkpoint(state, epoch, dst, is_best):
     if is_best:
         dst_best = os.path.join(dst, 'model_best', str(epoch)) + '.pth.tar'
         shutil.copyfile(filename, dst_best)
-
-
-def adjust_lr(optimizer, epoch, args):
-    # Decay learning rate by args.lr_decay_ratio every args.epoches_decay
-    lr = args.lr * ((1 - args.lr_decay_ratio) ** epoch // args.epoches_decay)
-    for param_group in optimizer.param_groups:
-        param_group['lr'] = lr
 
 
 def train(epoch, train_loader, network, optimizer, compute_loss, args):
@@ -53,7 +46,8 @@ def train(epoch, train_loader, network, optimizer, compute_loss, args):
 
         if step % 10 == 0:
             print('epoch:{}, step:{}, cmpm_loss:{:.3f}, cmpc_loss:{:.3f}'.format(epoch, step, cmpm_loss, cmpc_loss))
-        
+
+        # constrain embedding with the same id at the end of one epoch
         if (args.constraints_images or args.constraints_text) and step == len(train_loader) - 1:
             con_images, con_text = constraints_loss(train_loader, network, args)
             loss += (con_images + con_text)
@@ -125,6 +119,7 @@ def main(args):
         save_checkpoint(state, epoch, args.checkpoint_dir, is_best)
         logging.info('Epoch:  [{}|{}], train_time: {:.3f}, train_loss: {:.3f}'.format(epoch, args.num_epoches, train_time, train_loss))
         logging.info('image_precision: {:.3f}, text_precision: {:.3f}'.format(image_precision, text_precision))
+        adjust_lr(optimizer, epoch, args)
         #logging.info('val_time: {:.3f}, top1_i2t: {:.3f}, top10_i2t: {:.3f}, top1_t2i: {:.3f}, top10_t2i: {:.3f}'.format(val_time, ac_top1_i2t, ac_top10_i2t, ac_top1_t2i, ac_top10_t2i))
     #print('best i2t top1 ac:%.3f' % ac_i2t_best)
     #print('best t2i top1 ac:%.3f' % ac_t2i_best)
