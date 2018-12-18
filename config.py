@@ -25,39 +25,44 @@ def data_config(dataset_dir, batch_size, split, max_length, transform):
     return loader
 
 
-def network_config(args, split='train', param=None, resume=False, pretrained_path=None):
+def network_config(args, split='train', param=None, resume=False, model_path=None):
     network = Model(args)
     network = nn.DataParallel(network).cuda()
     cudnn.benchmark = True
     args.start_epoch = 0
-    if split != 'train':
-        args.pretrained = False
-    if args.pretrained:
-        # pretrained mobilenet
-        print('==> Loading from pretrained models')
-        network_dict = network.state_dict()
-        if args.image_model == 'mobilenet_v1':
-            cnn_pretrained = torch.load(pretrained_path)['state_dict']
-            start = 7
-        else:
-            cnn_pretrained = torch.load(pretrained_path)
-            start = 0
-        # process keyword of pretrained model
-        prefix = 'module.image_model.'
-        pretrained_dict = {prefix + k[start:] :v for k,v in cnn_pretrained.items()}
-        pretrained_dict = {k:v for k,v in pretrained_dict.items() if k in network_dict}
-        network_dict.update(pretrained_dict)
-        network.load_state_dict(network_dict)
-    # optionally resume from a checkpoint
-    elif resume:
-        if os.path.isfile(pretrained_path):
-            print('==> Loading checkpoint "{}"'.format(pretrained_path))
-            checkpoint = torch.load(pretrained_path)
+
+    # process network params
+    if resume:
+        if os.path.isfile(model_path):
+            print('==> Loading checkpoint "{}"'.format(model_path))
+            checkpoint = torch.load(model_path)
             args.start_epoch = checkpoint['epoch'] + 1
             # best_prec1 = checkpoint['best_prec1']
-            network.load_state_dict(checkpoint['state_dict'])
-    # optimizer
-    if split == 'train':
+            network.load_state_dict(checkpoint['network'])
+        else:
+            raise RuntimeError('==> No model to load in, wrong model path')
+    else:
+        # pretrained
+        if model_path is not None:
+            print('==> Loading from pretrained models')
+            network_dict = network.state_dict()
+            if args.image_model == 'mobilenet_v1':
+                cnn_pretrained = torch.load(model_path)['state_dict']
+                start = 7
+            else:
+                cnn_pretrained = torch.load(model_path)
+                start = 0
+            # process keyword of pretrained model
+            prefix = 'module.image_model.'
+            pretrained_dict = {prefix + k[start:] :v for k,v in cnn_pretrained.items()}
+            pretrained_dict = {k:v for k,v in pretrained_dict.items() if k in network_dict}
+            network_dict.update(pretrained_dict)
+            network.load_state_dict(network_dict)
+
+    if split == 'test':
+        optimizer = None
+    else:
+        # optimizer
         # different params for different part
         cnn_params = list(map(id, network.module.image_model.parameters()))
         other_params = filter(lambda p: id(p) not in cnn_params, network.parameters())
@@ -69,9 +74,9 @@ def network_config(args, split='train', param=None, resume=False, pretrained_pat
         optimizer = torch.optim.Adam(
             param_groups,
             lr = args.lr, betas=(args.adam_alpha, args.adam_beta), eps=args.epsilon)
-        #optimizer = torch.optim.Adam(network.parameters(),args.lr,betas=(args.adam_alpha, args.adam_beta), eps=args.epsilon)
-    else:
-        optimizer = None
+        if resume:
+            optimizer.load_state_dict(checkpoint['optimizer'])
+
     print('Total params: %2.fM' % (sum(p.numel() for p in network.parameters()) / 1000000.0))
     # seed
     manualSeed = random.randint(1, 10000)
@@ -79,17 +84,18 @@ def network_config(args, split='train', param=None, resume=False, pretrained_pat
     np.random.seed(manualSeed)
     torch.manual_seed(manualSeed)
     torch.cuda.manual_seed_all(manualSeed)
+
     return network, optimizer
 
 
 def log_config(args, ca):
     filename = args.log_dir +'/' + ca + '.log'
-    handler = logging.FileHandler(filename)                                                                                   
-    handler.setLevel(logging.INFO)                                                                                                      
-    formatter = logging.Formatter('%(message)s')                                                                                           
-    handler.setFormatter(formatter)                                                                                                     
+    handler = logging.FileHandler(filename)
+    handler.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(message)s')
+    handler.setFormatter(formatter)
     logger.addHandler(logging.StreamHandler())
-    logger.addHandler(handler)     
+    logger.addHandler(handler)
     logging.info(args)
 
 
