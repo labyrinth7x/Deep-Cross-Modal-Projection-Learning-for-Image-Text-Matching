@@ -58,10 +58,10 @@ def main(args):
     ac_i2t_top10_best = 0.0
     ac_t2i_top1_best = 0.0
     ac_t2i_top10_best = 0.0
-    i2t_models = os.listdir(args.pretrained_dir)
+    i2t_models = os.listdir(args.model_path)
     i2t_models.sort()
     for i2t_model in i2t_models:
-        model_file = os.path.join(args.pretrained_dir, i2t_model)
+        model_file = os.path.join(args.model_path, i2t_model)
         if os.path.isdir(model_file):
             continue
         epoch = i2t_model.split('.')[0]
@@ -82,9 +82,10 @@ def main(args):
         logging.info('epoch:{}'.format(epoch))
         logging.info('top1_t2i: {:.3f}, top10_t2i: {:.3f}, top1_i2t: {:.3f}, top10_i2t: {:.3f}'.format(
             ac_top1_t2i, ac_top10_t2i, ac_top1_i2t, ac_top10_i2t))
-    logging.info('i2t_top1_best: {:.3f}, i2t_top10_best: {:.3f}, t2i_top1_best: {:.3f}, t2i_top10_best: {:.3f}'.format(
+    logging.info('t2i_top1_best: {:.3f}, t2i_top10_best: {:.3f}, i2t_top1_best: {:.3f}, i2t_top10_best: {:.3f}'.format(
             ac_t2i_top1_best, ac_t2i_top10_best, ac_i2t_top1_best, ac_i2t_top10_best))
-
+    logging.info(args.model_path)
+    logging.info(args.log_dir)
 
 if __name__ == '__main__':
     args = config()

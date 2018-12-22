@@ -109,7 +109,7 @@ class Loss(nn.Module):
         self.epsilon = args.epsilon
         self.num_classes = args.num_classes
         if args.resume:
-            checkpoint = torch.load(args.pretrained_path)
+            checkpoint = torch.load(args.model_path)
             self.W = Parameter(checkpoint['W'])
             print('=========> Loading in parameter W from pretrained models')
         else:

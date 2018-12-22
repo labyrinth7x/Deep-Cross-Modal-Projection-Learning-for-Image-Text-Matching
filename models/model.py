@@ -17,7 +17,7 @@ class Model(nn.Module):
         self.bilstm.apply(self.bilstm.weight_init)
 
         inp_size = 1024
-        if args.image_model == 'resnet_50':
+        if args.image_model == 'resnet50':
             inp_size = 2048
         # shorten the tensor using 1*1 conv
         self.conv_images = nn.Conv2d(inp_size, args.feature_size, 1)

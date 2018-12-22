@@ -24,7 +24,6 @@ def data_config(dataset_dir, batch_size, split, max_length, transform):
     loader = data.DataLoader(data_split, batch_size, shuffle=shuffle, num_workers=4)
     return loader
 
-
 def network_config(args, split='train', param=None, resume=False, model_path=None):
     network = Model(args)
     network = nn.DataParallel(network).cuda()
@@ -34,11 +33,12 @@ def network_config(args, split='train', param=None, resume=False, model_path=Non
     # process network params
     if resume:
         directory.check_file(model_path, 'model_file')
-        print('==> Loading checkpoint "{}"'.format(model_path))
         checkpoint = torch.load(model_path)
         args.start_epoch = checkpoint['epoch'] + 1
         # best_prec1 = checkpoint['best_prec1']
-        network.load_state_dict(checkpoint['network'])
+        #network.load_state_dict(checkpoint['state_dict'])
+        network.load_state_dict(checkpoint['network']) 
+        print('==> Loading checkpoint "{}"'.format(model_path))
     else:
         # pretrained
         if model_path is not None:
@@ -110,7 +110,18 @@ def dir_config(args):
 def adjust_lr(optimizer, epoch, args):
     # Decay learning rate by args.lr_decay_ratio every args.epoches_decay
     if args.lr_decay_type == 'exponential':
-        lr = args.lr * ((1 - args.lr_decay_ratio) ** (args.start_epoch + epoch // args.epoches_decay))
+        if '_' in args.epoches_decay:
+            epoches_list = args.epoches_decay.split('_')
+            epoches_list = [int(e) for e in epoches_list]
+            for times, e in enumerate(epoches_list):
+                if epoch / e  == 0:
+                    lr = args.lr * ((1 - args.lr_decay_ratio) ** times)
+                    break
+                times = len(epoches_list)
+                lr = args.lr * ((1 - args.lr_decay_ratio) ** times)
+        else:
+            epoches_decay = int(args.epoches_decay)
+            lr = args.lr * ((1 - args.lr_decay_ratio) ** (epoch // epoches_decay))
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
     logging.info('lr:{}'.format(lr))

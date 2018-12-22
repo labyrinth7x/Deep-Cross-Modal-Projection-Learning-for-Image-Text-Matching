@@ -91,15 +91,15 @@ def main(args):
     nn.DataParallel(compute_loss).cuda()
     
     # network
-    network, optimizer = network_config(args, 'train', compute_loss.parameters(), args.resume, args.pretrained_path)
+    network, optimizer = network_config(args, 'train', compute_loss.parameters(), args.resume, args.model_path)
     #ac_i2t_best = 0.0
     #ac_t2i_best = 0.0
-    for epoch in range(args.num_epoches):
+    for epoch in range(args.num_epoches - args.start_epoch):
         # train for one epoch
-        train_loss, train_time, image_precision, text_precision = train(epoch, train_loader, network, optimizer, compute_loss, args)
+        train_loss, train_time, image_precision, text_precision = train(args.start_epoch + epoch, train_loader, network, optimizer, compute_loss, args)
         # evaluate on validation set
         is_best = False
-        print('Train done for epoch-{}'.format(epoch))
+        print('Train done for epoch-{}'.format(args.start_epoch + epoch))
         '''
         ac_top1_t2i, ac_top1_i2t, ac_top10_t2i, ac_top10_i2t, val_time = test(val_loader, network, args)
         # remember best top@1 and top@10, save checkpoint and logging to the console
@@ -115,10 +115,13 @@ def main(args):
         #         'ac': [ac_top1_i2t, ac_top10_i2t, ac_top1_t2i, ac_top10_t2i],
         #         'best_ac': [ac_i2t_best, ac_t2i_best]}
         save_checkpoint(state, epoch, args.checkpoint_dir, is_best)
-        logging.info('Epoch:  [{}|{}], train_time: {:.3f}, train_loss: {:.3f}'.format(epoch, args.num_epoches, train_time, train_loss))
+        logging.info('Epoch:  [{}|{}], train_time: {:.3f}, train_loss: {:.3f}'.format(args.start_epoch + epoch, args.num_epoches, train_time, train_loss))
         logging.info('image_precision: {:.3f}, text_precision: {:.3f}'.format(image_precision, text_precision))
-        adjust_lr(optimizer, epoch, args)
+        adjust_lr(optimizer, args.start_epoch + epoch, args)
         #logging.info('val_time: {:.3f}, top1_i2t: {:.3f}, top10_i2t: {:.3f}, top1_t2i: {:.3f}, top10_t2i: {:.3f}'.format(val_time, ac_top1_i2t, ac_top10_i2t, ac_top1_t2i, ac_top10_t2i))
+    logging.info('Train done')
+    logging.info(args.checkpoint_dir)
+    logging.info(args.log_dir)
     #print('best i2t top1 ac:%.3f' % ac_i2t_best)
     #print('best t2i top1 ac:%.3f' % ac_t2i_best)
 

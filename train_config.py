@@ -14,7 +14,7 @@ def parse_args():
     #parser.add_argument('--json_dir', type=str, help='directory to store json file')
     parser.add_argument('--checkpoint_dir', type=str, help='directory to store checkpoint')
     parser.add_argument('--log_dir', type=str, help='directory to store log')
-    parser.add_argument('--pretrained_path', type=str, default = None, help='directory to pretrained model, whole model or just visual part')
+    parser.add_argument('--model_path', type=str, default = None, help='directory to pretrained model, whole model or just visual part')
 
     # LSTM setting
     parser.add_argument('--embedding_size', type=int, default=512)
@@ -50,7 +50,7 @@ def parse_args():
     parser.add_argument('--end_lr', type=float, default=0.0001, help='minimum end learning rate used by a polynomial decay learning rate')
     parser.add_argument('--lr_decay_type', type=str, default='exponential', help='One of "fixed" or "exponential"')
     parser.add_argument('--lr_decay_ratio', type=float, default=0.1)
-    parser.add_argument('--epoches_decay', type=int, default=50, help='#epoches when learning rate decays')
+    parser.add_argument('--epoches_decay', type=str, default='50,100', help='#epoches when learning rate decays')
 
     # Default setting
     parser.add_argument('--gpus', type=str, default='0')
