@@ -145,9 +145,10 @@ def process_metadata(split, data, args):
     return image_metadata
 
 
-def process_decodedata(data, vocab, args):
+def process_decodedata(data, vocab, args):  
     """
     Decode ImageMetaData to ImageDecodeData
+    Each item in imagedecodedata has 2 captions. (len(captions_id) = 2)
     """
     image_decodedata = []
     for img in data:
@@ -170,11 +171,17 @@ def process_decodedata(data, vocab, args):
     return image_decodedata
 
 
-def process_dataset(split, decodedata):
+def process_dataset(split, decodedata, sort=False):
     # Process dataset
-    dataset = create_dataset(split, decodedata)
- 
-    write_dataset(split, dataset, args)
+    
+    if not sort:
+        # Arrange by caption
+        dataset = create_dataset(split, decodedata)
+        write_dataset(split, dataset, args)
+    else:
+        # Arrange by caption in a sorted form
+        dataset, label_range = create_dataset_sort(split, decodedata)
+        write_dataset(split, dataset, args, label_range)
     
 
 def create_dataset(split, data):
@@ -191,7 +198,33 @@ def create_dataset(split, data):
     return images
 
 
-def write_dataset(split, data, args):
+def create_dataset_sort(split, data):
+    images_sort = []
+    label_range = {}
+    images = {}
+    for img in data:
+        label = img.id
+        image = [ImageDecodeData(img.id, img.image_path, [caption_id], img.split) for caption_id in img.captions_id]
+        if label in images:
+            images[label].extend(image)
+            label_range[label].append(len(image))
+        else:
+            images[label] = image
+            label_range[label] = [len(image)]
+
+    print('=========== Arrange by id=============================')
+    index = 0
+    for label in images.keys():
+        images_sort.extend(images[label])
+        #label_range[-1] is the start index for the specified id.
+        num = sum(label_range[label])
+        label_range[label].append(index)
+        index += num
+
+    return images_sort, label_range 
+
+
+def write_dataset(split, data, args, label_range=None):
     """
     Separate each component
     Write dataset into binary file
@@ -208,7 +241,12 @@ def write_dataset(split, data, args):
 
     #N = len(images)
     data = {'caption_id':caption_id, 'labels':labels, 'images_path':images_path}
-    pickle_root = os.path.join(args.out_root, split + '.pkl')
+    
+    if label_range is not None:
+        data['label_range'] = label_range
+        pickle_root = os.path.join(args.out_root, split + '_sort.pkl')
+    else:
+        pickle_root = os.path.join(args.out_root, split + '.pkl')
     # Write caption_id and labels as pickle form
     with open(pickle_root, 'wb') as f:
         pickle.dump(data, f)
@@ -217,7 +255,7 @@ def write_dataset(split, data, args):
     #f = h5py.File(h5py_root, 'w')
     #f.create_dataset('images', (N, 3, args.default_image_size, args.default_image_size), data=images)
 
-    print('Save dataset')
+    print('Save dataset') 
 
 
 def generate_split(args):
@@ -276,10 +314,11 @@ def process_data(args):
     val_decodedata = process_decodedata(val_metadata, vocab, args)
     test_decodedata = process_decodedata(test_metadata, vocab, args)
     
-    process_dataset('train', train_decodedata)
-    process_dataset('val', val_decodedata)
-    process_dataset('test', test_decodedata)
-    
+    sort=True
+    process_dataset('train', train_decodedata, sort=sort)
+    process_dataset('val', val_decodedata, sort=sort)
+    process_dataset('test', test_decodedata, sort=sort)
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Command for data preprocessing')
