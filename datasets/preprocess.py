@@ -1,14 +1,9 @@
-import sys
 import pickle
-import h5py
 import json
 import argparse
-import numpy as np
 import string
 import os
-import random
-from scipy.misc import imread, imresize
-from directory import write_json, makedir
+from utils import write_json, makedir
 from collections import namedtuple
 
 
@@ -145,7 +140,7 @@ def process_metadata(split, data, args):
     return image_metadata
 
 
-def process_decodedata(data, vocab, args):  
+def process_decodedata(data, vocab):
     """
     Decode ImageMetaData to ImageDecodeData
     Each item in imagedecodedata has 2 captions. (len(captions_id) = 2)
@@ -171,32 +166,13 @@ def process_decodedata(data, vocab, args):
     return image_decodedata
 
 
-def process_dataset(split, decodedata, sort=False):
+def process_dataset(split, decodedata):
     # Process dataset
     
-    if not sort:
-        # Arrange by caption
-        dataset = create_dataset(split, decodedata)
-        write_dataset(split, dataset, args)
-    else:
-        # Arrange by caption in a sorted form
-        dataset, label_range = create_dataset_sort(split, decodedata)
-        write_dataset(split, dataset, args, label_range)
+    # Arrange by caption in a sorted form
+    dataset, label_range = create_dataset_sort(split, decodedata)
+    write_dataset(split, dataset, args, label_range)
     
-
-def create_dataset(split, data):
-    """
-    One image to one description
-    """
-    images = [ImageDecodeData(img.id, img.image_path, [caption_id], img.split) for img in data for caption_id in img.captions_id]
-
-    # shuffle training set and val set.
-    if split == 'train' or split == 'val':
-        random.seed(118)
-        random.shuffle(images)
-    
-    return images
-
 
 def create_dataset_sort(split, data):
     images_sort = []
@@ -213,13 +189,17 @@ def create_dataset_sort(split, data):
             label_range[label] = [len(image)]
 
     print('=========== Arrange by id=============================')
-    index = 0
+    index = -1
     for label in images.keys():
+        # all captions arrange together
         images_sort.extend(images[label])
-        #label_range[-1] is the start index for the specified id.
-        num = sum(label_range[label])
-        label_range[label].append(index)
-        index += num
+        # label_range is arranged according to their actual index
+        # label_range[label] = (previous, current]
+        start = index
+        for index_image in range(len(label_range[label])):
+            label_range[label][index_image] += index
+            index = label_range[label][index_image]
+        label_range[label].append(start)
 
     return images_sort, label_range 
 
@@ -308,16 +288,17 @@ def process_data(args):
     train_metadata = process_metadata('train', train_data, args)
     val_metadata = process_metadata('val', val_data, args)
     test_metadata = process_metadata('test', test_data, args)
+     
     
     # Decode Imagedata to index caption and replace image file_root with image vecetor.
-    train_decodedata = process_decodedata(train_metadata, vocab, args)
-    val_decodedata = process_decodedata(val_metadata, vocab, args)
-    test_decodedata = process_decodedata(test_metadata, vocab, args)
+    train_decodedata = process_decodedata(train_metadata, vocab)
+    val_decodedata = process_decodedata(val_metadata, vocab)
+    test_decodedata = process_decodedata(test_metadata, vocab)
     
-    sort=True
-    process_dataset('train', train_decodedata, sort=sort)
-    process_dataset('val', val_decodedata, sort=sort)
-    process_dataset('test', test_decodedata, sort=sort)
+    
+    process_dataset('train', train_decodedata)
+    process_dataset('val', val_decodedata)
+    process_dataset('test', test_decodedata)
 
 
 def parse_args():
