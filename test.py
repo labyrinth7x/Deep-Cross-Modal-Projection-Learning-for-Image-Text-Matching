@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import shutil
 import logging
 import gc
 import torch
@@ -67,17 +68,15 @@ def main(args):
         epoch = i2t_model.split('.')[0]
         if int(epoch) < args.epoch_start:
             continue
-        args.resume = True
         network, _ = network_config(args, 'test', None, True, model_file)
         ac_top1_i2t, ac_top10_i2t, ac_top1_t2i, ac_top10_t2i, test_time = test(test_loader, network, args)
-        if ac_top1_i2t > ac_i2t_top1_best:
-            ac_i2t_top1_best = ac_top1_i2t
-        if ac_top10_i2t > ac_i2t_top10_best:
-            ac_i2t_top10_best = ac_top10_i2t
         if ac_top1_t2i > ac_t2i_top1_best:
+            ac_i2t_top1_best = ac_top1_i2t
+            ac_i2t_top10_best = ac_top10_i2t
             ac_t2i_top1_best = ac_top1_t2i
-        if ac_top10_t2i > ac_t2i_top10_best:
             ac_t2i_top10_best = ac_top10_t2i
+            dst_best = os.path.join(args.checkpoint_dir, 'model_best', str(epoch)) + '.pth.tar'
+            shutil.copyfile(model_file, dst_best)
          
         logging.info('epoch:{}'.format(epoch))
         logging.info('top1_t2i: {:.3f}, top10_t2i: {:.3f}, top1_i2t: {:.3f}, top10_i2t: {:.3f}'.format(

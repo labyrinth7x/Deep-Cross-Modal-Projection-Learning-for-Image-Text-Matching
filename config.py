@@ -125,3 +125,12 @@ def adjust_lr(optimizer, epoch, args):
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
     logging.info('lr:{}'.format(lr))
+
+def lr_scheduler(optimizer, epoch):
+    if '_' in args.epoches_decay:
+        epoches_list = args.epoches_decay.split('_')
+        epoches_list = [int(e) for e in epoches_list]
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, epoches_list)
+    else:
+        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, int(args.epoches_decay))
+    return scheduler

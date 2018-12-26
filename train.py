@@ -9,7 +9,7 @@ import torch.nn as nn
 import torchvision.transforms as transforms
 from utils.metric import AverageMeter, Loss, constraints_loss
 from test import test
-from config import data_config, network_config, adjust_lr
+from config import data_config, network_config, adjust_lr, lr_scheduler
 from train_config import config
 
 logger = logging.getLogger()
@@ -92,25 +92,15 @@ def main(args):
     
     # network
     network, optimizer = network_config(args, 'train', compute_loss.parameters(), args.resume, args.model_path)
-    #ac_i2t_best = 0.0
-    #ac_t2i_best = 0.0
+    
+    # lr_scheduler
+    scheduler = lr_scheduler(optimizer, args)
     for epoch in range(args.num_epoches - args.start_epoch):
         # train for one epoch
         train_loss, train_time, image_precision, text_precision = train(args.start_epoch + epoch, train_loader, network, optimizer, compute_loss, args)
         # evaluate on validation set
         is_best = False
         print('Train done for epoch-{}'.format(args.start_epoch + epoch))
-        '''
-        ac_top1_t2i, ac_top1_i2t, ac_top10_t2i, ac_top10_i2t, val_time = test(val_loader, network, args)
-        # remember best top@1 and top@10, save checkpoint and logging to the console
-        is_best = False
-        if ac_top1_i2t > ac_i2t_best:
-            ac_i2t_best = ac_top1_i2t
-            is_best = True
-        if ac_top1_t2i > ac_t2i_best:
-            ac_t2i_best = ac_top1_t2i
-            is_best = True
-        '''
         state = {'network': network.state_dict(), 'optimizer': optimizer.state_dict(), 'W': compute_loss.W, 'epoch': args.start_epoch + epoch}
         #         'ac': [ac_top1_i2t, ac_top10_i2t, ac_top1_t2i, ac_top10_t2i],
         #         'best_ac': [ac_i2t_best, ac_t2i_best]}
@@ -118,12 +108,13 @@ def main(args):
         logging.info('Epoch:  [{}|{}], train_time: {:.3f}, train_loss: {:.3f}'.format(args.start_epoch + epoch, args.num_epoches, train_time, train_loss))
         logging.info('image_precision: {:.3f}, text_precision: {:.3f}'.format(image_precision, text_precision))
         adjust_lr(optimizer, args.start_epoch + epoch, args)
-        #logging.info('val_time: {:.3f}, top1_i2t: {:.3f}, top10_i2t: {:.3f}, top1_t2i: {:.3f}, top10_t2i: {:.3f}'.format(val_time, ac_top1_i2t, ac_top10_i2t, ac_top1_t2i, ac_top10_t2i))
+        scheduler.step()
+        for param in optimizer.param_groups:
+            print('lr:{}'.format(param['lr']))
+            break
     logging.info('Train done')
     logging.info(args.checkpoint_dir)
     logging.info(args.log_dir)
-    #print('best i2t top1 ac:%.3f' % ac_i2t_best)
-    #print('best t2i top1 ac:%.3f' % ac_t2i_best)
 
 
 if __name__ == "__main__":
