@@ -1,5 +1,9 @@
 import os
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
 import json
+import pickle
 
 def count_ids(root, flag=0):
     ids_dict = {}
@@ -13,35 +17,47 @@ def count_ids(root, flag=0):
     return ids_dict, captions
 
 
-if __name__ == "__main__":
-    data_root = '/home/zhangqi/Deep-Cross-Modal-Projection-Learning-for-Image-Text-Matching/data'
-    total_statistics, captions_total = count_ids(os.path.join(data_root, 'reid_raw.json'),flag=1)
-    print('{}-id {}-images {}-captions in total'.format(len(total_statistics), sum(total_statistics.values()), captions_total))
-    processed_root = os.path.join(data_root, 'processed_data')
-    train_statistics, captions_train = count_ids(os.path.join(processed_root, 'train_reid.json'))
-    print('{}-id {}-images {}-captions in train'.format(len(train_statistics), sum(train_statistics.values()), captions_train))
-    val_statistics, captions_val = count_ids(os.path.join(processed_root, 'val_reid.json'))
-    print('{}-id {}-images {}-captions in val'.format(len(val_statistics), sum(val_statistics.values()), captions_val))
-    test_statistics, captions_test = count_ids(os.path.join(processed_root, 'test_reid.json'))
-    print('{}-id {}-images {}-captions in test'.format(len(test_statistics), sum(test_statistics.values()), captions_test))
-    for index, (key, total_num) in enumerate(total_statistics.items()):
-        if key in train_statistics:
-            if total_num == train_statistics[key]:
-                continue
-            else:
-                print(key)
-                print(total_num - train_statistics[key])
-        if key in val_statistics:
-            if total_num == val_statistics[key]:
-                continue
-            else:
-                print(key)
-                print(total_num - val_statistics[key])
-        if key in test_statistics:
-            if total_num == test_statistics[key]:
-                continue
-            else:
-                print(key)
-                print(total_num - val_statistics[key])
-        print('-------------------{}---------------------'.format(index))
+def count_images(root):
+    info = pickle.load(open(root, 'rb'))['label_range']
+    images_dict = {}
+    # info['#images'] = num
+    for label in info:
+        num_images = len(info[label]) - 1
+        images_dict[num_images] = images_dict.get(num_images, 0) + 1
+    return images_dict
 
+def count_captions(root):
+    info = pickle.load(open(root, 'rb'))['label_range']
+    captions_dict = {}
+    for label in info:
+        for index in range(0, len(info[label]) - 1):
+            num_captions = info[label][index] - info[label][index - 1]
+            captions_dict[num_captions] = captions_dict.get(num_captions, 0) + 1
+    return captions_dict
+
+def visualize(data):
+    keys = list(data.keys())
+    keys.sort()
+    values = []
+    for key in keys:
+        values.append(data[key])
+    plt.figure('#captions in each image')
+    a = plt.bar(keys, values)
+    #plt.yticks([1,5,1,100,200,500,1000,5000])
+    plt.xticks(list(range(min(keys), max(keys) + 1, 1)))
+    autolabel(a)
+    plt.xlim(min(keys) - 1, max(keys) + 1)
+    plt.show()
+
+
+def autolabel(rects):
+    for rect in rects:
+        height = rect.get_height()
+        plt.text(rect.get_x() + rect.get_width() / 2 - 0.2, height + 2, '%s' % int(height))
+
+
+if __name__ == "__main__":
+    root = '/Users/zhangqi/Codes/Deep-Cross-Modal-Projection-Learning-for-Image-Text-Matching/data/processed_data/train_sort.pkl'
+    data = count_images(root)
+    print(data)
+    visualize(data)
