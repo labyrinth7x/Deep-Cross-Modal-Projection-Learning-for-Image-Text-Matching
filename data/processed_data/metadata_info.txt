@@ -1,3 +1,9 @@
 Total 68126 captions 34054 images 11003 identities in train
 Total 6158 captions 3078 images 1000 identities in val
 Total 6156 captions 3074 images 1000 identities in test
+Total 68126 captions 34054 images 11003 identities in train
+Total 6158 captions 3078 images 1000 identities in val
+Total 6156 captions 3074 images 1000 identities in test
+Total 68126 captions 34054 images 11003 identities in train
+Total 6158 captions 3078 images 1000 identities in val
+Total 6156 captions 3074 images 1000 identities in test
