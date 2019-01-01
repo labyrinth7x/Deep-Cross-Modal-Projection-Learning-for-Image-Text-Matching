@@ -86,7 +86,8 @@ class CuhkPedes(data.Dataset):
             img_path, caption, label = self.val_images[index], self.val_captions[index], self.val_labels[index]
         else:
             img_path, caption, label = self.test_images[index], self.test_captions[index], self.test_labels[index]
-
+        img_path = os.path.join(self.root.replace('processed_data',''), img_path)
+        print(img_path)
         img = imread(img_path)
         img = imresize(img, (224,224))
         if len(img.shape) == 2:

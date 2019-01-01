@@ -121,8 +121,11 @@ def process_metadata(split, data, args):
 
     for img in data:
         count += 1
-        filepath = os.path.join(args.img_root, img['file_path'])
-        assert os.path.exists(filepath)
+        # absolute image path
+        # filepath = os.path.join(args.img_root, img['file_path'])
+        # relative image path
+        filepath = img['file_path']
+        # assert os.path.exists(filepath)
         id = img['id'] - 1
         captions = img['processed_tokens']
         id_to_captions.setdefault(id, [])
