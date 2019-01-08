@@ -35,6 +35,7 @@ def parse_args():
     parser.add_argument('--loss_weight', type=float, default=1)
     parser.add_argument('--CMPM', action='store_true')
     parser.add_argument('--CMPC', action='store_true')
+    parser.add_argument('--cnn_dropout_keep', type=float, default=0.999)
     parser.add_argument('--constraints_text', action='store_true')
     parser.add_argument('--constraints_images', action='store_true')
     parser.add_argument('--num_classes', type=int, default=11003)

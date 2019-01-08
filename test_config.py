@@ -21,7 +21,8 @@ def parse_args():
     parser.add_argument('--feature_size', type=int, default=512)
 
     parser.add_argument('--image_model', type=str, default='mobilenet_v1')
-
+    parser.add_argument('--cnn_dropout_keep', type=float, default=0.999)
+    
     # Default setting
     parser.add_argument('--gpus', type=str, default='0')
     parser.add_argument('--epoch_start', type=int)
