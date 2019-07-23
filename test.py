@@ -53,7 +53,7 @@ def main(args):
         transforms.ToTensor(),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
-    test_loader = data_config(args.dataset_dir, 64, 'test', args.max_length, test_transform)
+    test_loader = data_config(args.image_dir, args.anno_dir, 64, 'test', args.max_length, test_transform)
 
     ac_i2t_top1_best = 0.0
     ac_i2t_top10_best = 0.0

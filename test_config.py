@@ -6,7 +6,8 @@ import logging
 def parse_args():
     parser = argparse.ArgumentParser(description='command for evaluate on CUHK-PEDES')
     # Directory
-    parser.add_argument('--dataset_dir', type=str, help='directory to store dataset')
+    parser.add_argument('--image_dir', type=str, help='directory to store dataset')
+    parser.add_argument('--anno_dir', type=str, help='directory to store anno')
     parser.add_argument('--model_path', type=str, help='directory to load checkpoint')
     parser.add_argument('--log_dir', type=str, help='directory to store log')
 

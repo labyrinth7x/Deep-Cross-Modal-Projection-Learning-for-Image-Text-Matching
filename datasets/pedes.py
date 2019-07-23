@@ -20,16 +20,17 @@ class CuhkPedes(data.Dataset):
     pklname_list = ['train.pkl', 'val.pkl', 'test.pkl']
     h5name_list = ['train.h5', 'val.h5', 'test.h5']
 
-    def __init__(self, root, split, max_length, transform=None, target_transform=None, cap_transform=None):
-
-        self.root = root
+    def __init__(self, image_root, anno_root, split, max_length, transform=None, target_transform=None, cap_transform=None):
+        
+        self.image_root = image_root
+        self.anno_root = anno_root
         self.max_length = max_length
         self.transform = transform
         self.target_transform = target_transform
         self.cap_transform = cap_transform
         self.split = split.lower()
 
-        if not check_exists(self.root):
+        if not check_exists(self.image_root):
             raise RuntimeError('Dataset not found or corrupted.' +
                                'Please follow the directions to generate datasets')
 
@@ -37,7 +38,7 @@ class CuhkPedes(data.Dataset):
             self.pklname = self.pklname_list[0]
             #self.h5name = self.h5name_list[0]
 
-            with open(os.path.join(self.root, self.pklname), 'rb') as f_pkl:
+            with open(os.path.join(self.anno_root, self.pklname), 'rb') as f_pkl:
                 data = pickle.load(f_pkl)
                 self.train_labels = data['labels']
                 self.train_captions = data['caption_id']
@@ -49,7 +50,7 @@ class CuhkPedes(data.Dataset):
         elif self.split == 'val':
             self.pklname = self.pklname_list[1]
             #self.h5name = self.h5name_list[1]
-            with open(os.path.join(self.root, self.pklname), 'rb') as f_pkl:
+            with open(os.path.join(self.anno_root, self.pklname), 'rb') as f_pkl:
                 data = pickle.load(f_pkl)
                 self.val_labels = data['labels']
                 self.val_captions = data['caption_id']
@@ -61,7 +62,7 @@ class CuhkPedes(data.Dataset):
             self.pklname = self.pklname_list[2]
             #self.h5name = self.h5name_list[2]
 
-            with open(os.path.join(self.root, self.pklname), 'rb') as f_pkl:
+            with open(os.path.join(self.anno_root, self.pklname), 'rb') as f_pkl:
                 data = pickle.load(f_pkl)
                 self.test_labels = data['labels']
                 self.test_captions = data['caption_id']
@@ -86,8 +87,7 @@ class CuhkPedes(data.Dataset):
             img_path, caption, label = self.val_images[index], self.val_captions[index], self.val_labels[index]
         else:
             img_path, caption, label = self.test_images[index], self.test_captions[index], self.test_labels[index]
-        img_path = os.path.join(self.root.replace('processed_data',''), img_path)
-        print(img_path)
+        img_path = os.path.join(self.image_root, img_path)
         img = imread(img_path)
         img = imresize(img, (224,224))
         if len(img.shape) == 2:

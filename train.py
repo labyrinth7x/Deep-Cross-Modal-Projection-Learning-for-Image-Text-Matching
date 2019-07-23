@@ -83,7 +83,7 @@ def main(args):
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
     # data
-    train_loader = data_config(args.dataset_dir, args.batch_size, 'train', args.max_length, train_transform)
+    train_loader = data_config(args.image_dir, args.anno_dir, args.batch_size, 'train', args.max_length, train_transform)
     #val_loader = data_config(args.dataset_dir, 64, 'val', args.max_length, val_transform)
     
     # loss

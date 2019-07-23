@@ -15,8 +15,8 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
-def data_config(dataset_dir, batch_size, split, max_length, transform):
-    data_split = CuhkPedes(dataset_dir, split, max_length, transform)
+def data_config(image_dir, anno_dir, batch_size, split, max_length, transform):
+    data_split = CuhkPedes(image_dir, anno_dir, split, max_length, transform)
     if split == 'train':
         shuffle = True
     else:
@@ -99,8 +99,10 @@ def log_config(args, ca):
 
 
 def dir_config(args):
-    if not os.path.exists(args.dataset_dir):
-        raise ValueError('Supply the dataset directory with --dataset_dir')
+    if not os.path.exists(args.image_dir):
+        raise ValueError('Supply the dataset directory with --image_dir')
+    if not os.path.exists(args.anno_dir):
+        raise ValueError('Supply the anno file with --anno_dir')
     directory.makedir(args.log_dir)
     # save checkpoint
     directory.makedir(args.checkpoint_dir)
@@ -126,7 +128,7 @@ def adjust_lr(optimizer, epoch, args):
         param_group['lr'] = lr
     logging.info('lr:{}'.format(lr))
 
-def lr_scheduler(optimizer, epoch):
+def lr_scheduler(optimizer, args):
     if '_' in args.epoches_decay:
         epoches_list = args.epoches_decay.split('_')
         epoches_list = [int(e) for e in epoches_list]

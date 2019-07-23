@@ -10,8 +10,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description='command for train on CUHK-PEDES')
 
     # Directory
-    parser.add_argument('--dataset_dir', type=str, help='directory to store dataset')
-    #parser.add_argument('--json_dir', type=str, help='directory to store json file')
+    parser.add_argument('--image_dir', type=str, help='directory to store dataset')
+    parser.add_argument('--anno_dir', type=str, help='directory to store anno file')
     parser.add_argument('--checkpoint_dir', type=str, help='directory to store checkpoint')
     parser.add_argument('--log_dir', type=str, help='directory to store log')
     parser.add_argument('--model_path', type=str, default = None, help='directory to pretrained model, whole model or just visual part')

@@ -2,7 +2,8 @@ GPUS=0
 export CUDA_VISIBLE_DEVICES=$GPUS
 
 BASE_ROOT=/home/zhangqi/Deep-Cross-Modal-Projection-Learning-for-Image-Text-Matching
-DATASET_DIR=$BASE_ROOT/data/processed_data
+IMAGE_DIR=/home/zhangqi/TriCrossModalV2/data/
+ANNO_DIR=$BASE_ROOT/data/processed_data
 CKPT_DIR=$BASE_ROOT/data/model_data
 LOG_DIR=$BASE_ROOT/data/logs
 PRETRAINED_PATH=$BASE_ROOT/mobilenet_sgd_rmsprop_69.526.tar
@@ -21,9 +22,10 @@ python3.5 $BASE_ROOT/train.py \
     --pretrained \
     --model_path $PRETRAINED_PATH \
     --image_model $IMAGE_MODEL \
-    --log_dir $LOG_DIR/$lr/$lr_decay_ratio \
-    --checkpoint_dir $CKPT_DIR/$lr/$lr_decay_ratio \
-    --dataset_dir $DATASET_DIR \
+    --log_dir $LOG_DIR/lr-$lr-decay-$lr_decay_ratio-batch-$batch_size \
+    --checkpoint_dir $CKPT_DIR/lr-$lr-decay-$lr_decay_ratio-batch-$batch_size \
+    --image_dir $IMAGE_DIR \
+    --anno_dir $ANNO_DIR \
     --batch_size $batch_size \
     --gpus $GPUS \
     --num_epoches $num_epoches \
@@ -33,9 +35,10 @@ python3.5 $BASE_ROOT/train.py \
 
 python3.5 ${BASE_ROOT}/test.py \
     --bidirectional \
-    --model_path $CKPT_DIR/$lr/$lr_decay_ratio \
+    --model_path $CKPT_DIR/lr-$lr-decay-$lr_decay_ratio-batch-$batch_size \
     --image_model $IMAGE_MODEL \
-    --log_dir $LOG_DIR/$lr/$lr_decay_ratio \
-    --dataset_dir $DATASET_DIR \
+    --log_dir $LOG_DIR/lr-$lr-decay-$lr_decay_ratio-batch-$batch_size \
+    --image_dir $IMAGE_DIR \
+    --anno_dir $ANNO_DIR \
     --gpus $GPUS \
     --epoch_start 100
