@@ -1,5 +1,5 @@
 # Deep Cross-Modal Projection Learning for Image-Text Matching
-This is a simple implmentation for the paper [Joint Optimization Framework for Learning with Nosiy Labels](http://openaccess.thecvf.com/content_ECCV_2018/papers/Ying_Zhang_Deep_Cross-Modal_Projection_ECCV_2018_paper.pdf)<br>
+This is a simple implmentation for the paper [Deep Cross-Modal Projection Learning for Image-Text Matching](http://openaccess.thecvf.com/content_ECCV_2018/papers/Ying_Zhang_Deep_Cross-Modal_Projection_ECCV_2018_paper.pdf)<br>
 The official implementation is by TensorFlow.[here](https://github.com/YingZhangDUT/Cross-Modal-Projection-Learning)<br>
 ## Requirement<br>
 * Python 3.5 
