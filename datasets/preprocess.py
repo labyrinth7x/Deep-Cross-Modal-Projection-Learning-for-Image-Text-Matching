@@ -3,7 +3,7 @@ import json
 import argparse
 import string
 import os
-from utils import write_json, makedir
+from utils.directory import write_json, makedir
 from collections import namedtuple
 
 

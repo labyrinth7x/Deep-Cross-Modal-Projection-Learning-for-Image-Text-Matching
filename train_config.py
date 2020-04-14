@@ -52,6 +52,8 @@ def parse_args():
     parser.add_argument('--lr_decay_type', type=str, default='exponential', help='One of "fixed" or "exponential"')
     parser.add_argument('--lr_decay_ratio', type=float, default=0.1)
     parser.add_argument('--epoches_decay', type=str, default='50,100', help='#epoches when learning rate decays')
+    parser.add_argument('--epoch_ema', type=int, default=0)
+    parser.add_argument('--ema_decay', type=float, default=0.9)
 
     # Default setting
     parser.add_argument('--gpus', type=str, default='0')

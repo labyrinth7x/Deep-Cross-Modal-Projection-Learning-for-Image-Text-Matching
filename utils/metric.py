@@ -11,6 +11,24 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
+
+class EMA():
+    def __init__(self, decay=0.999):
+        self.decay = decay
+        self.shadow = {}
+
+    def register(self, name, val):
+        self.shadow[name] = val.cpu().detach()
+
+    def get(self, name):
+        return self.shadow[name]
+
+    def update(self, name, x):
+        assert name in self.shadow
+        new_average = (1.0 - self.decay) * x.cpu().detach() + self.decay * self.shadow[name]
+        self.shadow[name] = new_average.clone()
+
+
 def pairwise_distance(A, B):
     """
     Compute distance between points in A and points in B

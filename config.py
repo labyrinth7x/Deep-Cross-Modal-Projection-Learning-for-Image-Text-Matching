@@ -24,7 +24,7 @@ def data_config(image_dir, anno_dir, batch_size, split, max_length, transform):
     loader = data.DataLoader(data_split, batch_size, shuffle=shuffle, num_workers=4)
     return loader
 
-def network_config(args, split='train', param=None, resume=False, model_path=None):
+def network_config(args, split='train', param=None, resume=False, model_path=None, ema=False):
     network = Model(args)
     network = nn.DataParallel(network).cuda()
     cudnn.benchmark = True
@@ -37,7 +37,11 @@ def network_config(args, split='train', param=None, resume=False, model_path=Non
         args.start_epoch = checkpoint['epoch'] + 1
         # best_prec1 = checkpoint['best_prec1']
         #network.load_state_dict(checkpoint['state_dict'])
-        network.load_state_dict(checkpoint['network']) 
+        network_dict = checkpoint['network']
+        if ema:
+            logging.info('==> EMA Loading')
+            network_dict.update(checkpoint['network_ema'])
+        network.load_state_dict(network_dict) 
         print('==> Loading checkpoint "{}"'.format(model_path))
     else:
         # pretrained

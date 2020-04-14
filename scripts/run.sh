@@ -1,4 +1,4 @@
-GPUS=0
+GPUS=3
 export CUDA_VISIBLE_DEVICES=$GPUS
 
 BASE_ROOT=/home/zhangqi/Deep-Cross-Modal-Projection-Learning-for-Image-Text-Matching
@@ -6,7 +6,7 @@ IMAGE_DIR=/home/zhangqi/TriCrossModalV2/data/
 ANNO_DIR=$BASE_ROOT/data/processed_data
 CKPT_DIR=$BASE_ROOT/data/model_data
 LOG_DIR=$BASE_ROOT/data/logs
-PRETRAINED_PATH=$BASE_ROOT/mobilenet_sgd_rmsprop_69.526.tar
+PRETRAINED_PATH=$BASE_ROOT/pretrained_models/mobilenet.tar
 #PRETRAINED_PATH=$BASE_ROOT/resnet50.pth
 IMAGE_MODEL=mobilenet_v1
 lr=0.0002
@@ -33,6 +33,7 @@ python3.5 $BASE_ROOT/train.py \
     --lr_decay_ratio $lr_decay_ratio \
     --epoches_decay ${epoches_decay}
 
+
 python3.5 ${BASE_ROOT}/test.py \
     --bidirectional \
     --model_path $CKPT_DIR/lr-$lr-decay-$lr_decay_ratio-batch-$batch_size \
@@ -41,4 +42,4 @@ python3.5 ${BASE_ROOT}/test.py \
     --image_dir $IMAGE_DIR \
     --anno_dir $ANNO_DIR \
     --gpus $GPUS \
-    --epoch_start 100
+    --epoch_ema 0

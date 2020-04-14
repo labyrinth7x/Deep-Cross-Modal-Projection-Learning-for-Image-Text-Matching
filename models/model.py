@@ -10,14 +10,16 @@ class Model(nn.Module):
         if args.image_model == 'mobilenet_v1':
             self.image_model = MobileNetV1()
             self.image_model.apply(self.image_model.weight_init)
-        else:
+        elif args.image_model == 'resnet50':
             self.image_model = resnet50()
+        elif args.image_model == 'resent101':
+            self.image_model = resnet101()
 
         self.bilstm = BiLSTM(args)
         self.bilstm.apply(self.bilstm.weight_init)
 
         inp_size = 1024
-        if args.image_model == 'resnet50':
+        if args.image_model == 'resnet50' or args.image_model == 'resnet101':
             inp_size = 2048
         # shorten the tensor using 1*1 conv
         self.conv_images = nn.Conv2d(inp_size, args.feature_size, 1)
