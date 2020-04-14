@@ -1,5 +1,5 @@
 # Deep Cross-Modal Projection Learning for Image-Text Matching
-This is a Pytorch implmentation for the paper [Deep Cross-Modal Projection Learning for Image-Text Matching](http://openaccess.thecvf.com/content_ECCV_2018/papers/Ying_Zhang_Deep_Cross-Modal_Projection_ECCV_2018_paper.pdf)   
+This is a Pytorch implmentation for the paper [Deep Cross-Modal Projection Learning for Image-Text Matching](http://openaccess.thecvf.com/content_ECCV_2018/papers/Ying_Zhang_Deep_Cross-Modal_Projection_ECCV_2018_paper.pdf).   
 The official implementation in TensorFlow can be found [here](https://github.com/YingZhangDUT/Cross-Modal-Projection-Learning).   
 ## Requirement   
 * Python 3.5 
