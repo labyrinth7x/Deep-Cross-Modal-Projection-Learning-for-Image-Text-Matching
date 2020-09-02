@@ -7,7 +7,7 @@ import torch
 import torch.utils.data as data
 import torch.nn as nn
 import torchvision.transforms as transforms
-from utils.metric import AverageMeter, Loss, constraints_loss
+from utils.metric import AverageMeter, Loss, constraints_loss, EMA
 from test import test
 from config import data_config, network_config, adjust_lr, lr_scheduler
 from train_config import config
